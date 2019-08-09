@@ -188,12 +188,10 @@ public class DispatcherServlet extends HttpServlet {
             doDispatch(req, resp);
         } catch (Exception e) {
             e.printStackTrace();
-            resp.getWriter().println("500:" + Arrays.asList(e.getStackTrace()));
         }
     }
 
-
-    private void doDispatch(HttpServletRequest req, HttpServletResponse resp) {
+    private void doDispatch(HttpServletRequest req, HttpServletResponse resp) throws Exception {
 
     }
 }
