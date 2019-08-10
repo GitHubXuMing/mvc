@@ -15,7 +15,8 @@ public class UserAction {
     UserService userService;
 
     @RequestMapping("welcome.do")
-    public void welcome(String username, HttpServletRequest request, HttpServletResponse response) {
+    public void welcome(String username) {
+        System.out.println("*********************************************");
         System.out.println("Welcome " + userService.getUsername(username));
     }
 }

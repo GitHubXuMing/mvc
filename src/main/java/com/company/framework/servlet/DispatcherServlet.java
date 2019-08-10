@@ -44,9 +44,9 @@ public class DispatcherServlet extends HttpServlet {
         autowired();
         //5-实现HandlerMapping（key:value）  key=url   value=method的初始化
         initHandlerMapping();
-        for (Map.Entry<String, Method> entry : handlerMapping.entrySet()) {
-            System.out.println("********" + entry.getKey() + "<---->" + entry.getValue().getName());
-        }
+//        for (Map.Entry<String, Method> entry : handlerMapping.entrySet()) {
+//            System.out.println("********" + entry.getKey() + "<---->" + entry.getValue().getName());
+//        }
     }
 
 
@@ -137,7 +137,7 @@ public class DispatcherServlet extends HttpServlet {
                         Autowired autowired = field.getAnnotation(Autowired.class);
                         String beanName = autowired.value();
                         if ("".equals(beanName)) {
-                            beanName = field.getType().getSimpleName();
+                            beanName = field.getType().getName();
                         }
                         field.setAccessible(true);
                         try {
@@ -169,8 +169,8 @@ public class DispatcherServlet extends HttpServlet {
                             RequestMapping uri = method.getAnnotation(RequestMapping.class);
                             baseUrl += "/" + uri.value();
                         }
-                        System.out.println(baseUrl);
-                        handlerMapping.put(baseUrl, method);
+//                        System.out.println(baseUrl);
+                        handlerMapping.put(baseUrl.replaceAll("/+","/").trim(), method);
                     }
                 }
             }
@@ -192,6 +192,37 @@ public class DispatcherServlet extends HttpServlet {
     }
 
     private void doDispatch(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        if(!handlerMapping.isEmpty()){
 
+            //1-截取用户请求的uri
+            String url = req.getRequestURI();
+            String contextPath = req.getContextPath();
+            String uriKey = url.replace(contextPath,"")
+                    .replaceAll("/+","/");
+//            System.out.println(uriKey);
+
+            //2-与handlerMapping进行匹配，找到Method方法
+            if(handlerMapping.containsKey(uriKey)){
+                //3-执行Method方法
+                Method method = handlerMapping.get(uriKey);
+                //从IOC容器中获得类的对象
+                String beanName = initBeanName(method.getDeclaringClass().getSimpleName());
+                Object obj = containerIOC.get(beanName);
+                //获得用户传来的请求参数
+                Map<String,String[]> userParams = req.getParameterMap();
+                String[] params = new String[userParams.size()];
+                int i=0;
+                for(String[] param:userParams.values()){
+                    params[i] = param[0];
+                    i++;
+                }
+                System.out.println(Arrays.asList(params));
+                //执行方法
+                method.invoke(obj,params);
+            }else{
+                resp.getWriter().println("404:no uri match in HandlerMapping");
+            }
+
+        }
     }
 }
